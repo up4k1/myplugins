@@ -19,7 +19,12 @@ function advanced_telegram_notifier_do_page()
     // Выводим текущее время сервера перед обработкой формы
     $current_server_time = date('H:i');
     echo '<p>Текущее время сервера: ' . $current_server_time . '</p>';
-
+    echo '<form method="post">';
+    echo '<input type="submit" name="test_report" value="Тестовая отправка отчета" />';
+    echo '</form>';
+    if (isset($_POST['test_report'])) {
+        advanced_telegram_notifier_send_test_report();
+    }
     // Check if a form was submitted
     if (isset($_POST['submit'])) {
         // Process form and save options
@@ -58,6 +63,18 @@ function advanced_telegram_notifier_do_page()
     echo '<p><input type="checkbox" id="notify_daily_report" name="notify_daily_report" ' . ($current_options['notify_daily_report'] === 'true' ? 'checked' : '') . '> <label for="notify_daily_report">Send daily report</label></p>';
     echo '<p><input type="submit" name="submit" value="Save" /></p>';
     echo '</form>';
+}
+
+function advanced_telegram_notifier_send_test_report()
+{
+    $links_statistics = yourls_get_db()->fetchAll("SELECT `shorturl`, COUNT(*) as 'clicks' FROM `yourls_log` GROUP BY `shorturl`");
+
+    $message = "Тестовый отчет о кликах:\n";
+    foreach ($links_statistics as $stat) {
+        $message .= "Short URL: {$stat['shorturl']}, Clicks: {$stat['clicks']}\n";
+    }
+
+    telegram_send_notification($message);
 }
 // Function to send notification
 function telegram_send_notification($message)

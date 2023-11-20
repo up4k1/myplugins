@@ -95,7 +95,8 @@ function advanced_telegram_notifier_on_redirect($args)
     if ($options['notify_redirect'] === 'true') {
         $shorturl = $args[0];
         $url = $args[1];
-        $message = "Short URL redirect: $shorturl to $url";
+        $ip = $_SERVER['REMOTE_ADDR']; // Получаем IP адрес пользователя
+        $message = "Short URL redirect: $shorturl to $url and IP: $ip";
         telegram_send_notification($message);
     }
 }

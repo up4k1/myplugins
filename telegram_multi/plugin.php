@@ -47,8 +47,10 @@ function advanced_telegram_notifier_do_page()
     $chat_id = yourls_get_option('advanced_telegram_notifier_chat_id');
     $report_time = yourls_get_option('advanced_telegram_notifier_report_time', '00:00');
     $current_options = yourls_get_option('advanced_telegram_notifier_options', ['notify_new_link' => 'false', 'notify_redirect' => 'false', 'notify_daily_report' => 'false']);
+    if (!isset($current_options['notify_daily_report'])) {
+        $current_options['notify_daily_report'] = 'false';
+    }
 
-    // Create nonce
     $nonce = yourls_create_nonce('advanced_telegram_notifier_nonce');
 
     // Build and display the admin page form

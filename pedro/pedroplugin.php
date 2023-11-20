@@ -13,13 +13,35 @@ function advanced_telegram_notifier_admin_page()
     yourls_register_plugin_page('advanced_telegram_notifier', 'Advanced Telegram Notifier', 'advanced_telegram_notifier_do_page');
 }
 
+
+function advanced_telegram_notifier_check_and_send_report()
+{
+    $last_report_time = yourls_get_option('advanced_telegram_notifier_last_report_time', '0000-00-00 00:00:00');
+    $current_time = date('Y-m-d H:i:s');
+    $report_time = yourls_get_option('advanced_telegram_notifier_report_time', '00:00');
+
+    $date_last_report = new DateTime($last_report_time);
+    $date_now = new DateTime($current_time);
+    $date_report_time_today = new DateTime(date('Y-m-d') . ' ' . $report_time);
+
+    // Проверяем, не отправляли ли мы уже отчет сегодня и пришло ли время для отправки
+    if ($date_last_report < $date_report_time_today && $date_now >= $date_report_time_today) {
+        advanced_telegram_notifier_send_daily_report();
+        yourls_update_option('advanced_telegram_notifier_last_report_time', $current_time);
+    }
+}
 // Display admin page
 function advanced_telegram_notifier_do_page()
 {
     // Выводим текущее время сервера перед обработкой формы
     $current_server_time = date('H:i');
     echo '<p>Текущее время сервера: ' . $current_server_time . '</p>';
-
+    echo '<form method="post">';
+    echo '<input type="submit" name="test_report" value="Тестовая отправка отчета" />';
+    echo '</form>';
+    if (isset($_POST['test_report'])) {
+        advanced_telegram_notifier_send_test_report();
+    }
     // Check if a form was submitted
     if (isset($_POST['submit'])) {
         // Process form and save options
@@ -58,6 +80,18 @@ function advanced_telegram_notifier_do_page()
     echo '<p><input type="checkbox" id="notify_daily_report" name="notify_daily_report" ' . ($current_options['notify_daily_report'] === 'true' ? 'checked' : '') . '> <label for="notify_daily_report">Send daily report</label></p>';
     echo '<p><input type="submit" name="submit" value="Save" /></p>';
     echo '</form>';
+}
+
+function advanced_telegram_notifier_send_test_report()
+{
+    $links_statistics = yourls_get_db()->fetchAll("SELECT `shorturl`, COUNT(*) as 'clicks' FROM `yourls_log` GROUP BY `shorturl`");
+
+    $message = "Тестовый отчет о кликах:\n";
+    foreach ($links_statistics as $stat) {
+        $message .= "Short URL: {$stat['shorturl']}, Clicks: {$stat['clicks']}\n";
+    }
+
+    telegram_send_notification($message);
 }
 // Function to send notification
 function telegram_send_notification($message)
@@ -145,6 +179,8 @@ function advanced_telegram_notifier_check_report_time()
 }
 
 // Функция для отправки ежедневного отчета
+
+
 function advanced_telegram_notifier_send_daily_report()
 {
     if (advanced_telegram_notifier_check_report_time()) {
@@ -153,6 +189,5 @@ function advanced_telegram_notifier_send_daily_report()
         telegram_send_notification($message);
     }
 }
-
 // Добавляем функцию отправки ежедневного отчета в планировщик задач YOURLS
 yourls_add_action('pre_yourls_die', 'advanced_telegram_notifier_send_daily_report');

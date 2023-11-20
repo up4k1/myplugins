@@ -76,6 +76,19 @@ function telegram_send_notification($message)
     }
 }
 
+function get_real_user_ip()
+{
+    $headers = ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR'];
+    foreach ($headers as $header) {
+        if (!empty($_SERVER[$header])) {
+            $ips = explode(',', $_SERVER[$header]);
+            return trim($ips[0]);
+        }
+    }
+    return 'Не удалось определить IP';
+}
+
+
 // Function to handle new link creation notification
 function advanced_telegram_notifier_on_new_link($args)
 {
@@ -95,8 +108,8 @@ function advanced_telegram_notifier_on_redirect($args)
     if ($options['notify_redirect'] === 'true') {
         $shorturl = $args[0];
         $url = $args[1];
-        $ip = $_SERVER['REMOTE_ADDR']; // Получаем IP адрес пользователя
-        $message = "Short URL redirect: $shorturl to $url and IP: $ip";
+        $ip = get_real_user_ip(); // Получаем реальный IP адрес пользователя
+        $message = "Short URL redirect: $shorturl to $url, IP: $ip";
         telegram_send_notification($message);
     }
 }

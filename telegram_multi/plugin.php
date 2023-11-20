@@ -2,8 +2,8 @@
 /*
 Plugin Name: Advanced Telegram Notifier
 Description: Sends notifications to Telegram for different actions
-Version: 1.0
-Author: Your Name
+Version: 1.3
+Author: Anton Panov
 */
 
 // Register admin page
